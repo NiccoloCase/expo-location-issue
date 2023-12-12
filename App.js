@@ -2,7 +2,14 @@ import * as Location from "expo-location";
 import * as TaskManager from "expo-task-manager";
 import * as Notifications from "expo-notifications";
 import { useEffect, useState } from "react";
-import { Text, View, StyleSheet } from "react-native";
+import {
+  Text,
+  View,
+  StyleSheet,
+  Permission,
+  PermissionsAndroid,
+} from "react-native";
+import { Button } from "react-native";
 
 const YOUR_TASK_NAME = "geofencing-task";
 
@@ -58,16 +65,35 @@ export default function App() {
   const [location, setLocation] = useState(null);
   const [errorMsg, setErrorMsg] = useState(null);
 
+  const requestPermissions = async () => {
+    // Request gps permissions
+    let { status } = await Location.requestForegroundPermissionsAsync();
+    console.log("STATUS", status);
+    if (status === "denied") {
+      setErrorMsg("Permission to access location was denied");
+      alert("Permission to access location was denied", { status });
+      return false;
+    }
+
+    // Requests notification permissions
+    const { status: status3 } = await Notifications.requestPermissionsAsync();
+    if (status3 !== "granted") {
+      setErrorMsg("Permission to send Notifications was denied");
+      return false;
+    }
+
+    return true;
+  };
+
   useEffect(() => {
     (async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
-        setErrorMsg("Permission to access location was denied");
-        return;
-      }
+      const permissions = await requestPermissions();
+      if (!permissions) return;
 
       let location = await Location.getCurrentPositionAsync({});
       setLocation(location);
+
+      console.log("LOCATION", location);
 
       const isRunning = await Location.hasStartedGeofencingAsync(
         YOUR_TASK_NAME
@@ -116,7 +142,27 @@ export default function App() {
         identifier: "AUD-B",
       });
 
-      await Location.startGeofencingAsync(YOUR_TASK_NAME, regions);
+      regions.push({
+        latitude: 43.770828,
+        longitude: 11.25032,
+        radius: 100,
+        notifyOnEnter: true,
+        notifyOnExit: true,
+        identifier: "NIC",
+      });
+
+      regions.push({
+        latitude: 43.78376,
+        longitude: 11.27857,
+        radius: 100,
+        notifyOnEnter: true,
+        notifyOnExit: true,
+        identifier: "LEOPOLDO",
+      });
+
+      await Location.startGeofencingAsync(YOUR_TASK_NAME, [...regions]);
+
+      console.log("STARTED GEOFENCING");
     })();
   }, []);
 
@@ -130,6 +176,13 @@ export default function App() {
   return (
     <View style={styles.container}>
       <Text style={styles.paragraph}>{text}</Text>
+
+      <Button
+        title="request permissions"
+        onPress={async () => {
+          await requestPermissions();
+        }}
+      />
     </View>
   );
 }
