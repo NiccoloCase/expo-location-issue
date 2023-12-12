@@ -21,10 +21,16 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.niccolocase.geo"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "6ad075eb-4abe-4ecb-9f0f-2881f1c3eb9c"
+      }
     }
   }
 }
